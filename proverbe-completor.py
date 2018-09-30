@@ -16,7 +16,9 @@ class ProverbeCompletor:
     def __create_model(self, corpus, n_gramme):
         self.grammes = self.__calculate_n_gramme_occurence(corpus, n_gramme)
         if n_gramme > 1:
+            corpus.seek(0)
             self.historical_grammes = self.__calculate_n_gramme_occurence(corpus, n_gramme - 1)
+        corpus.seek(0)
         self.__calculate_nb_of_words_in_corpus(corpus)
 
     def __calculate_nb_of_words_in_corpus(self, corpus):
