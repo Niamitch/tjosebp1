@@ -8,8 +8,10 @@ def get_ingredient(line):
     ingredient = ''
 
     for match in matches:
-        quantity += match[0]
-        ingredient += match[1]
+        quantity += match[0]+' '
+        ingredient += match[1]+' '
+    quantity = quantity[:-1]
+    ingredient = ingredient[:-1]
     return (quantity,ingredient)
 
 
