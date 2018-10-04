@@ -6,6 +6,7 @@ nltk.download('punkt')
 class ProverbeCompletor:
 
     PROVERBE_LANGUAGE = "french"
+    UNKNOWN_SEQUENCE = "***"
 
     nb_of_words_in_corpus = 0
     grammes = {}
@@ -41,7 +42,7 @@ class ProverbeCompletor:
         return grammes
 
     def complete(self, incomplete_proverbe, candidate_words, n_gramme):
-        last_proverbe_words = nltk.word_tokenize(incomplete_proverbe.split("***")[0], self.PROVERBE_LANGUAGE)[-(n_gramme-1):]
+        last_proverbe_words = nltk.word_tokenize(incomplete_proverbe.split(self.UNKNOWN_SEQUENCE)[0], self.PROVERBE_LANGUAGE)[-(n_gramme-1):]
         historic_proverbe_part = tuple(last_proverbe_words)
         best_candiate = None
         best_candidate_probability = 0
@@ -61,7 +62,7 @@ class ProverbeCompletor:
                 if probability > best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
-        return best_candiate
+        return incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate)
 
 def main(argv):
     n_gramme = 3
