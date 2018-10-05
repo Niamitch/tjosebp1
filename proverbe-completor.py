@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import sys
 import nltk
 import numpy as np
+import io
 nltk.download('punkt')
 
 class ProverbeCompletor:
@@ -66,7 +68,7 @@ class ProverbeCompletor:
 
 def main(argv):
     n_gramme = 3
-    corpus = open('./resources/proverbes.txt')
+    corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, n_gramme)
     returned_proverbe = proverbe_completor.complete("a beau mentir qui *** de loin", ["vient", "part", "mange", "programme"], n_gramme)
     print(returned_proverbe)
