@@ -91,16 +91,20 @@ class ProverbeCompletor:
                 proverbe_part = tuple(copy_of_candidate_proverbe)
                 if proverbe_part in self.grammes and historic_proverbe_part in self.historical_grammes:
                     probability = self.grammes[proverbe_part] / float(self.historical_grammes[historic_proverbe_part])
-                if probability > best_candidate_probability:
+                if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
             else:
                 if (candidate_word,) in self.grammes:
                     probability = self.grammes[(candidate_word,)] / float(self.nb_of_words_in_corpus)
-                if probability > best_candidate_probability:
+                if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
-        return incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate)
+        completed_proverbe = incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate, 1)
+        if self.UNKNOWN_SEQUENCE in completed_proverbe:
+            return self.complete(completed_proverbe, candidate_words, n_gramme)
+        else:
+            return completed_proverbe
 
 
 def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor):
@@ -120,7 +124,7 @@ def main(argv):
     n_gramme = 3
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, n_gramme)
-    execute_proverbe_completor_on_file("./resources/test1.txt", n_gramme, proverbe_completor)
+    execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor)
 
 
 
