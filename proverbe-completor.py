@@ -102,12 +102,25 @@ class ProverbeCompletor:
                     best_candiate = candidate_word
         return incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate)
 
+
+def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor):
+    print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
+    with io.open(file, mode="r", encoding="utf-8") as file_content:
+        for file_line in file_content:
+            incomplet_proverbe = file_line.split(": ")[0].replace("{", "").replace("\"", "").replace(" }", "")
+            if len(incomplet_proverbe) > 0:
+                candidate_words = eval(file_line.split(": ")[1])
+                if type(candidate_words) is tuple:
+                    candidate_words = candidate_words[0]
+                returned_proverbe = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
+                print(returned_proverbe + "  Candidat choice: " + str(candidate_words))
+
+
 def main(argv):
     n_gramme = 3
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, n_gramme)
-    returned_proverbe = proverbe_completor.complete("a beau mentir qui *** de loin", ["vient", "part", "mange", "programme"], n_gramme)
-    print(returned_proverbe)
+    execute_proverbe_completor_on_file("./resources/test1.txt", n_gramme, proverbe_completor)
 
 
 
