@@ -29,16 +29,29 @@ class ProverbeCompletor:
             self.nb_of_words_in_corpus = self.nb_of_words_in_corpus + len(tokenized_proverbe)
 
 
-    def __calculate_probability(self,tuple):
+    def __calculate_probability_stupid_backoff(self,tuple):
+        probability = 0
         grammeLength = len(tuple)
-        if(grammeLength == 1):
-            probability = self.grammes[tuple]/float(self.nb_of_words_in_corpus)
+        if(grammeLength >=1):
+            if(grammeLength == 1):
+                probability = self.grammes[grammeLength][tuple]/float(self.nb_of_words_in_corpus)
+            else:
+                historicalTuple = tuple[:grammeLength-1]
+                if historicalTuple in self.grammes[grammeLength]:
+                    probability = self.grammes[grammeLength][tuple]/float(self.grammes[grammeLength-1][historicalTuple])
+                else:
+                    newTuple = tuple[1:]
+                    probability = 0.4*self.__calculate_probability_stupid_backoff(newTuple)
+        return probability
+
+    def __calculate_probability_add_delta(self,tuple):
+        grammeLength = len(tuple)
+        if (grammeLength == 1):
+            probability = (self.grammes[grammeLength][tuple]+1) / float(self.nb_of_words_in_corpus+len(self.grammes[grammeLength]))
         else:
             newTuple = tuple[1:]
-            if newTuple in self.grammes:
-                probability = self.grammes[tuple]/float(self.grammes[newTuple])
-            else:
-                probability = self.__calculate_probability(newTuple)
+            probability = (self.grammes[grammeLength][tuple]+1) / float(self.grammes[grammeLength - 1][newTuple]+len(self.grammes[grammeLength]))
+
         return probability
 
     def __calculate_n_gramme_occurence(self, corpus, n_gramme): #WIP
