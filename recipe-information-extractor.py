@@ -11,7 +11,10 @@ def print_temperatures_in_text(text):
     for line in text:
         temperatures = get_temperatures(line)
         if len(temperatures) != 0:
-            print(temperatures)
+            temperature = ""
+            for i in range(len(temperatures[0])):
+                temperature = temperature + temperatures[0][i]
+            print(temperature)
 
 def print_bake_times_in_text(text):
     print("Bake times in text:")
@@ -28,7 +31,7 @@ def get_bake_times(line_of_text):
     return re.findall(bake_times_regex, line_of_text)
 
 def get_temperatures(line_of_text):
-    temperatures_regex = r'((?:\d+ to )?\d+ ?(?:degrees?|deg F.|°|F))'
+    temperatures_regex = r'(medium heat)|((?:\d+ to )?\d+ ?(?:degrees?|deg F.|°|F))'
     return re.findall(temperatures_regex, line_of_text)
 
 if __name__ == "__main__":
