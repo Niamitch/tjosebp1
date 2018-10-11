@@ -12,24 +12,16 @@ class ProverbeCompletor:
 
     nb_of_words_in_corpus = 0
     grammes = {}
-    grammesArray = []
     historical_grammes = {}
 
     def __init__(self, corpus, n_gramme=1):
         self.__create_model(corpus, n_gramme)
 
+
     def __create_model(self, corpus, n_gramme):
         self.grammes = self.__calculate_n_gramme_occurence(corpus, n_gramme)
-        if n_gramme > 1:
-            corpus.seek(0)
-            self.historical_grammes = self.__calculate_n_gramme_occurence(corpus, n_gramme - 1)
         corpus.seek(0)
         self.__calculate_nb_of_words_in_corpus(corpus)
-
-    def __create_model2(self, corpus, n_gramme):
-        i = 1
-        for i in n_gramme:
-            self.grammesArray.append(self.__calculate_n_gramme_occurence2(corpus, i))
 
     def __calculate_nb_of_words_in_corpus(self, corpus):
         for proverbe in corpus:
@@ -49,34 +41,21 @@ class ProverbeCompletor:
                 probability = self.__calculate_probability(newTuple)
         return probability
 
-    def __calculate_n_gramme_occurence2(self, corpus, n_gramme): #WIP
-        grammes = []
+    def __calculate_n_gramme_occurence(self, corpus, n_gramme): #WIP
+        grammes = {}
         for i in range(n_gramme):
-            grammes.append({})
+            grammes[i+1] = {}
         for proverbe in corpus:
             tokenized_proverbe = nltk.word_tokenize(proverbe, self.PROVERBE_LANGUAGE)
             if len(tokenized_proverbe) >= n_gramme:
                 for word_index in range(len(tokenized_proverbe)-1):
-                    for i in range(n_gramme):
-                        if word_index+i < len(tokenized_proverbe):
+                    for i in range(1,n_gramme+1):
+                        if word_index+i-1 < len(tokenized_proverbe):
                             gramme = tuple(tokenized_proverbe[word_index + tuple_index] for tuple_index in range(i))
                             if gramme not in grammes[i]:
                                 grammes[i][gramme] = 1
                             else:
                                 grammes[i][gramme] = grammes[i][gramme] + 1
-        return grammes
-
-    def __calculate_n_gramme_occurence(self, corpus, n_gramme):
-        grammes = {}
-        for proverbe in corpus:
-            tokenized_proverbe = nltk.word_tokenize(proverbe, self.PROVERBE_LANGUAGE)
-            if len(tokenized_proverbe) >= n_gramme:
-                for word_index in range(len(tokenized_proverbe) - (n_gramme - 1)):
-                    gramme = tuple(tokenized_proverbe[word_index + tuple_index] for tuple_index in range(n_gramme))
-                    if gramme not in grammes:
-                        grammes[gramme] = 1
-                    else:
-                        grammes[gramme] = grammes[gramme] + 1
         return grammes
 
     def complete(self, incomplete_proverbe, candidate_words, n_gramme):
@@ -89,14 +68,14 @@ class ProverbeCompletor:
             if n_gramme > 1:
                 copy_of_candidate_proverbe = np.append(last_proverbe_words,candidate_word)
                 proverbe_part = tuple(copy_of_candidate_proverbe)
-                if proverbe_part in self.grammes and historic_proverbe_part in self.historical_grammes:
-                    probability = self.grammes[proverbe_part] / float(self.historical_grammes[historic_proverbe_part])
+                if proverbe_part in self.grammes[n_gramme] and historic_proverbe_part in self.grammes[n_gramme-1]:
+                    probability = self.grammes[n_gramme][proverbe_part] / float(self.grammes[n_gramme-1][historic_proverbe_part])
                 if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
             else:
-                if (candidate_word,) in self.grammes:
-                    probability = self.grammes[(candidate_word,)] / float(self.nb_of_words_in_corpus)
+                if (candidate_word,) in self.grammes[n_gramme]:
+                    probability = self.grammes[n_gramme][(candidate_word,)] / float(self.nb_of_words_in_corpus)
                 if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
@@ -105,7 +84,6 @@ class ProverbeCompletor:
             return self.complete(completed_proverbe, candidate_words, n_gramme)
         else:
             return completed_proverbe
-
 
 def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor):
     print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
@@ -124,7 +102,7 @@ def main(argv):
     n_gramme = 3
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, n_gramme)
-    execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor)
+    execute_proverbe_completor_on_file("./resources/test1.txt", n_gramme, proverbe_completor)
 
 
 
