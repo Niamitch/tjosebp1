@@ -3,6 +3,7 @@ import sys
 import nltk
 import numpy as np
 import io
+import math
 nltk.download('punkt')
 
 class ProverbeCompletor:
@@ -140,6 +141,9 @@ def __calculate_standard_probability(self,tuple):
     grammeLength = len(tuple)
     historicalTuple = tuple[:grammeLength - 1]
     return self.calculate_probability(tuple)
+
+def __calculate_logprob(probabilities):
+    return math.exp(np.sum(probabilities))
 
 def main(argv):
     n_gramme = 5
