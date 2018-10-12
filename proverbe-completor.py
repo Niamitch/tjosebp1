@@ -78,17 +78,25 @@ class ProverbeCompletor:
         else:
             return completed_proverbe
 
-def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor):
+def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpus):
     print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
+    nb_correct_proverbe = 0
     with io.open(file, mode="r", encoding="utf-8") as file_content:
         for file_line in file_content:
-            incomplet_proverbe = file_line.split(": ")[0].replace("{", "").replace("\"", "").replace(" }", "")
+            incomplet_proverbe = file_line.split(": ")[0].replace("{", "").replace("\"", "").replace(" }", "").lstrip().rstrip()
             if len(incomplet_proverbe) > 0:
                 candidate_words = eval(file_line.split(": ")[1])
                 if type(candidate_words) is tuple:
                     candidate_words = candidate_words[0]
                 returned_proverbe = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
                 print(returned_proverbe + "  Candidat choice: " + str(candidate_words))
+                corpus.seek(0)
+                for corpus_line in corpus:
+                    corpus_line = corpus_line.rstrip()
+                    if corpus_line == returned_proverbe:
+                        nb_correct_proverbe = nb_correct_proverbe + 1
+
+    print("Number of correct proverbe: " + str(nb_correct_proverbe))
 
 
 def __calculate_probability_stupid_backoff(self, tuple):
@@ -131,7 +139,7 @@ def main(argv):
     backoff_constant = 0.4
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, __calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
-    execute_proverbe_completor_on_file("./resources/test1.txt", n_gramme, proverbe_completor)
+    execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
 
 
 
