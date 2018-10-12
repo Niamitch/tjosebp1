@@ -17,7 +17,7 @@ class ProverbeCompletor:
     backoff_constant = 0
 
 
-    def __init__(self, corpus, probability_function, n_gramme=1, delta=1, backoff=0.4,):
+    def __init__(self, corpus, probability_function, n_gramme=1, delta=1.0, backoff=0.4,):
         self.backoff_constant = backoff
         self.delta_value = delta
         self.probability_function = probability_function
@@ -121,7 +121,7 @@ def __calculate_probability_add_delta(self, tuple):
         probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
             self.nb_of_words_in_corpus + (self.delta_value * len(self.grammes[grammeLength])))
     else:
-        newTuple = tuple[1:]
+        newTuple = tuple[:grammeLength - 1]
         probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
             self.grammes[grammeLength - 1][newTuple] + (self.delta_value * len(self.grammes[grammeLength])))
 
@@ -135,10 +135,10 @@ def __calculate_standard_probability(self,tuple):
 
 def main(argv):
     n_gramme = 3
-    add_delta_value = 1
-    backoff_constant = 0.4
+    add_delta_value = 100
+    backoff_constant = 10
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
-    proverbe_completor = ProverbeCompletor(corpus, __calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
+    proverbe_completor = ProverbeCompletor(corpus, __calculate_probability_add_delta, n_gramme, add_delta_value, backoff_constant)
     execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
 
 
