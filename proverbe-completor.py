@@ -52,12 +52,14 @@ class ProverbeCompletor:
                                 grammes[i][gramme] = grammes[i][gramme] + 1
         return grammes
 
-    def calculate_probability(self,tuple):
+    def calculate_probability(self,tuple,probabilities):
         grammeLength = len(tuple)
         if grammeLength == 1:
-            return self.grammes[grammeLength][tuple]/ float(self.nb_of_words_in_corpus)
+            probabilities.append(self.grammes[grammeLength][tuple]/ float(self.nb_of_words_in_corpus))
         else:
-            return self.grammes[grammeLength][tuple]/self.grammes[grammeLength-1][tuple[:grammeLength-1]] *self.calculate_probability(tuple[:grammeLength - 1])
+            probabilities.append(self.grammes[grammeLength][tuple]/self.grammes[grammeLength-1][tuple[:grammeLength-1]])
+            self.calculate_probability(tuple[:grammeLength - 1],probabilities)
+        return probabilities
 
     def complete(self, incomplete_proverbe, candidate_words, n_gramme):
         last_proverbe_words = nltk.word_tokenize(incomplete_proverbe.split(self.UNKNOWN_SEQUENCE)[0], self.PROVERBE_LANGUAGE)[-(n_gramme-1):]
@@ -80,7 +82,6 @@ class ProverbeCompletor:
                 if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
-        print(best_candidate_probability)
         completed_proverbe = incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate, 1)
         if self.UNKNOWN_SEQUENCE in completed_proverbe:
             return self.complete(completed_proverbe, candidate_words, n_gramme)
@@ -123,7 +124,6 @@ def __calculate_probability_stupid_backoff(self, tuple):
                 probability = self.backoff_constant * __calculate_probability_stupid_backoff(self,newTuple)
     return probability
 
-
 def __calculate_probability_add_delta(self, tuple):
     grammeLength = len(tuple)
     if (grammeLength == 1):
@@ -138,15 +138,13 @@ def __calculate_probability_add_delta(self, tuple):
 
 
 def __calculate_standard_probability(self,tuple):
-    grammeLength = len(tuple)
-    historicalTuple = tuple[:grammeLength - 1]
-    return self.calculate_probability(tuple)
+    return calculate_logprob(self.calculate_probability(tuple,[]))
 
-def __calculate_logprob(probabilities):
-    return math.exp(np.sum(probabilities))
+def calculate_logprob(probabilities):
+    return math.exp(np.sum(np.log10(probabilities)))
 
 def main(argv):
-    n_gramme = 5
+    n_gramme = 3
     add_delta_value = 100
     backoff_constant = 10
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
