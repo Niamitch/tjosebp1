@@ -95,7 +95,7 @@ def __calculate_probability_stupid_backoff(self, tuple):
     probability = 0
     grammeLength = len(tuple)
     if (grammeLength >= 1):
-        if (grammeLength == 1):
+        if (grammeLength == 1 and tuple in self.grammes[grammeLength]):
             probability = self.grammes[grammeLength][tuple] / float(self.nb_of_words_in_corpus)
         else:
             historicalTuple = tuple[:grammeLength - 1]
@@ -103,7 +103,7 @@ def __calculate_probability_stupid_backoff(self, tuple):
                 probability = self.grammes[grammeLength][tuple] / float(self.grammes[grammeLength - 1][historicalTuple])
             else:
                 newTuple = tuple[1:]
-                probability = self.backoff_constant * self.__calculate_probability_stupid_backoff(newTuple)
+                probability = self.backoff_constant * __calculate_probability_stupid_backoff(self,newTuple)
     return probability
 
 
@@ -130,8 +130,8 @@ def main(argv):
     add_delta_value = 1
     backoff_constant = 0.4
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
-    proverbe_completor = ProverbeCompletor(corpus, __calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
-    execute_proverbe_completor_on_file("./resources/test1.txt", n_gramme, proverbe_completor)
+    proverbe_completor = ProverbeCompletor(corpus, __calculate_probability_stupid_backoff, n_gramme, add_delta_value, backoff_constant)
+    execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor)
 
 
 
