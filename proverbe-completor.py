@@ -55,9 +55,11 @@ class ProverbeCompletor:
         grammeLength = len(tuple)
         if grammeLength == 1:
             probabilities.append(self.grammes[grammeLength][tuple]/ float(self.nb_of_words_in_corpus))
-        else:
+        elif tuple in self.grammes[grammeLength] and tuple[:grammeLength-1] in self.grammes[grammeLength-1]:
             probabilities.append(self.grammes[grammeLength][tuple]/self.grammes[grammeLength-1][tuple[:grammeLength-1]])
             self.calculate_probability(tuple[:grammeLength - 1],probabilities)
+        else:
+            probabilities.append(0)
         return probabilities
 
     def calculate_probability_with_delta(self,tuple,probabilities):
@@ -65,9 +67,11 @@ class ProverbeCompletor:
         if grammeLength == 1:
             probabilities.append((self.grammes[grammeLength][tuple]+self.delta_value) / float(len(self.grammes[grammeLength])*self.delta_value+self.nb_of_words_in_corpus))
         else:
+            initial_probabiblity = self.grammes[grammeLength][tuple] if tuple in self.grammes[grammeLength] else 0
+            initial_probability_historical = self.grammes[grammeLength - 1][tuple[:grammeLength - 1]] if tuple[:grammeLength - 1] in self.grammes[grammeLength - 1] else 0
             probabilities.append(
-                (self.grammes[grammeLength][tuple]+self.delta_value) / (len(self.grammes[grammeLength])*self.delta_value+self.grammes[grammeLength - 1][tuple[:grammeLength - 1]]))
-            self.calculate_probability(tuple[:grammeLength - 1], probabilities)
+                (initial_probabiblity+self.delta_value) / (len(self.grammes[grammeLength])*self.delta_value+initial_probability_historical))
+            self.calculate_probability_with_delta(tuple[:grammeLength - 1], probabilities)
         return probabilities
 
     def complete(self, incomplete_proverbe, candidate_words, n_gramme):
@@ -75,6 +79,7 @@ class ProverbeCompletor:
         historic_proverbe_part = tuple(last_proverbe_words)
         best_candiate = None
         best_candidate_probability = 0
+        best_candidate_tuple = None
         for candidate_word in candidate_words:
             probability = 0
             if n_gramme > 1:
@@ -85,22 +90,29 @@ class ProverbeCompletor:
                 if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
+                    best_candidate_tuple = proverbe_part
             else:
                 if (candidate_word,) in self.grammes[n_gramme]:
                     probability = self.grammes[n_gramme][(candidate_word,)] / float(self.nb_of_words_in_corpus)
                 if probability >= best_candidate_probability:
                     best_candidate_probability = probability
                     best_candiate = candidate_word
+                    best_candidate_tuple = (candidate_word,)
         completed_proverbe = incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate, 1)
+        perplexity = self.calculate_perplexity(best_candidate_tuple)
         if self.UNKNOWN_SEQUENCE in completed_proverbe:
-            return self.complete(completed_proverbe, candidate_words, n_gramme)
+            completed_proverbe, next_perplexity = self.complete(completed_proverbe, candidate_words, n_gramme)
+            return completed_proverbe, (next_perplexity + perplexity)
         else:
-            return completed_proverbe
+            return completed_proverbe, perplexity
+
+    def calculate_perplexity(self, tuple):
+        return self.probability_function(self, tuple) ** (-1.0 / len(tuple))
 
 def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpus):
     print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
     nb_correct_proverbe = 0
-    perplexity = []
+    perplexities = []
     with io.open(file, mode="r", encoding="utf-8") as file_content:
         for file_line in file_content:
             incomplet_proverbe = file_line.split(": ")[0].replace("{", "").replace("\"", "").replace(" }", "").lstrip().rstrip()
@@ -108,7 +120,9 @@ def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpu
                 candidate_words = eval(file_line.split(": ")[1])
                 if type(candidate_words) is tuple:
                     candidate_words = candidate_words[0]
-                returned_proverbe = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
+                returned_proverbe, perplexity_sum = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
+                perplexity = perplexity_sum / incomplet_proverbe.count(proverbe_completor.UNKNOWN_SEQUENCE)
+                perplexities.append(perplexity)
                 print(returned_proverbe + "  Candidat choice: " + str(candidate_words))
                 corpus.seek(0)
                 for corpus_line in corpus:
@@ -117,6 +131,7 @@ def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpu
                         nb_correct_proverbe = nb_correct_proverbe + 1
 
     print("Number of correct proverbe: " + str(nb_correct_proverbe))
+    print("Mean perplexity: " + str(np.mean(perplexities)))
 
 
 
@@ -144,9 +159,6 @@ def __calculate_standard_probability(self,tuple):
 
 def calculate_logprob(probabilities):
     return math.exp(np.sum(np.log10(probabilities)))
-
-def print_perplexity(self,tuple):
-    print(self.probability_function(tuple) ** (-1.0/len(tuple)))
 
 
 def main(argv):
