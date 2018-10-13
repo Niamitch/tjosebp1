@@ -144,7 +144,7 @@ def calculate_logprob(probabilities):
     return math.exp(np.sum(np.log10(probabilities)))
 
 def print_perplexity(self,tuple):
-    print(self.probability_function(tuple) ** (1.0/len(tuple)))
+    print(self.probability_function(tuple) ** (-1.0/len(tuple)))
 
 
 def main(argv):
