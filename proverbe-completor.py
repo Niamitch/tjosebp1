@@ -13,7 +13,6 @@ class ProverbeCompletor:
 
     nb_of_words_in_corpus = 0
     grammes = {}
-    historical_grammes = {}
     delta_value = 0
     backoff_constant = 0
 
@@ -152,7 +151,7 @@ def main(argv):
     add_delta_value = 100
     backoff_constant = 10
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
-    proverbe_completor = ProverbeCompletor(corpus, __calculate_probability_stupid_backoff, n_gramme, add_delta_value, backoff_constant)
+    proverbe_completor = ProverbeCompletor(corpus, __calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
     execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
 
 
