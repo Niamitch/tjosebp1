@@ -61,13 +61,13 @@ class ProverbeCompletor:
             self.calculate_probability(tuple[:grammeLength - 1],probabilities)
         return probabilities
 
-    def calculate_probability_with_delat(self,tuple,probabilities,delta):
+    def calculate_probability_with_delta(self,tuple,probabilities):
         grammeLength = len(tuple)
         if grammeLength == 1:
-            probabilities.append((self.grammes[grammeLength][tuple]+delta) / float(len(self.grammes[grammeLength][tuple])*delta+self.nb_of_words_in_corpus))
+            probabilities.append((self.grammes[grammeLength][tuple]+self.delta_value) / float(len(self.grammes[grammeLength])*self.delta_value+self.nb_of_words_in_corpus))
         else:
             probabilities.append(
-                self.grammes[grammeLength][tuple] / self.grammes[grammeLength - 1][tuple[:grammeLength - 1]])
+                (self.grammes[grammeLength][tuple]+self.delta_value) / (len(self.grammes[grammeLength])*self.delta_value+self.grammes[grammeLength - 1][tuple[:grammeLength - 1]]))
             self.calculate_probability(tuple[:grammeLength - 1], probabilities)
         return probabilities
 
@@ -135,17 +135,7 @@ def __calculate_probability_stupid_backoff(self, tuple):
     return probability
 
 def __calculate_probability_add_delta(self, tuple):
-    grammeLength = len(tuple)
-    if (grammeLength == 1):
-
-        probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
-            self.nb_of_words_in_corpus + (self.delta_value * len(self.grammes[grammeLength])))
-    else:
-        newTuple = tuple[:grammeLength - 1]
-        probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
-            self.grammes[grammeLength - 1][newTuple] + (self.delta_value * len(self.grammes[grammeLength])))
-
-    return probability
+    return calculate_logprob(self.calculate_probability_with_delta(tuple,[]))
 
 
 def __calculate_standard_probability(self,tuple):
@@ -163,7 +153,7 @@ def main(argv):
     add_delta_value = 100
     backoff_constant = 10
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
-    proverbe_completor = ProverbeCompletor(corpus, __calculate_probability_stupid_backoff, n_gramme, add_delta_value, backoff_constant)
+    proverbe_completor = ProverbeCompletor(corpus, __calculate_probability_add_delta, n_gramme, add_delta_value, backoff_constant)
     execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
 
 
