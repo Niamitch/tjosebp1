@@ -90,6 +90,7 @@ class ProverbeCompletor:
 def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpus):
     print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
     nb_correct_proverbe = 0
+    perplexity = []
     with io.open(file, mode="r", encoding="utf-8") as file_content:
         for file_line in file_content:
             incomplet_proverbe = file_line.split(": ")[0].replace("{", "").replace("\"", "").replace(" }", "").lstrip().rstrip()
@@ -106,6 +107,7 @@ def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpu
                         nb_correct_proverbe = nb_correct_proverbe + 1
 
     print("Number of correct proverbe: " + str(nb_correct_proverbe))
+
 
 
 def __calculate_probability_stupid_backoff(self, tuple):
@@ -148,8 +150,8 @@ def print_perplexity(self,tuple):
 
 def main(argv):
     n_gramme = 3
-    add_delta_value = 100
-    backoff_constant = 10
+    add_delta_value = 0.1
+    backoff_constant = 0.1
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
     proverbe_completor = ProverbeCompletor(corpus, __calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
     execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
