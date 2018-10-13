@@ -143,6 +143,10 @@ def __calculate_standard_probability(self,tuple):
 def calculate_logprob(probabilities):
     return math.exp(np.sum(np.log10(probabilities)))
 
+def print_perplexity(self,tuple):
+    print(self.probability_function(tuple) ** (1.0/len(tuple)))
+
+
 def main(argv):
     n_gramme = 3
     add_delta_value = 100
