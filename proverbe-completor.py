@@ -163,11 +163,14 @@ def calculate_standard_probability(self,tuple):
 
 
 def main(argv):
+    # Parameters
     n_gramme = 3
     add_delta_value = 0.1
     backoff_constant = 0.1
+    probability_function = calculate_standard_probability
+
     corpus = io.open('./resources/proverbes.txt', mode="r", encoding="utf-8")
-    proverbe_completor = ProverbeCompletor(corpus, calculate_standard_probability, n_gramme, add_delta_value, backoff_constant)
+    proverbe_completor = ProverbeCompletor(corpus, probability_function, n_gramme, add_delta_value, backoff_constant)
     execute_proverbe_completor_on_file("./resources/test2.txt", n_gramme, proverbe_completor, corpus)
 
 
