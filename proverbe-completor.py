@@ -60,6 +60,16 @@ class ProverbeCompletor:
             self.calculate_probability(tuple[:grammeLength - 1],probabilities)
         return probabilities
 
+    def calculate_probability_with_delta(self,tuple,probabilities):
+        grammeLength = len(tuple)
+        if grammeLength == 1:
+            probabilities.append((self.grammes[grammeLength][tuple]+self.delta_value) / float(len(self.grammes[grammeLength])*self.delta_value+self.nb_of_words_in_corpus))
+        else:
+            probabilities.append(
+                (self.grammes[grammeLength][tuple]+self.delta_value) / (len(self.grammes[grammeLength])*self.delta_value+self.grammes[grammeLength - 1][tuple[:grammeLength - 1]]))
+            self.calculate_probability(tuple[:grammeLength - 1], probabilities)
+        return probabilities
+
     def complete(self, incomplete_proverbe, candidate_words, n_gramme):
         last_proverbe_words = nltk.word_tokenize(incomplete_proverbe.split(self.UNKNOWN_SEQUENCE)[0], self.PROVERBE_LANGUAGE)[-(n_gramme-1):]
         historic_proverbe_part = tuple(last_proverbe_words)
@@ -119,23 +129,14 @@ def __calculate_probability_stupid_backoff(self, tuple):
         else:
             historicalTuple = tuple[:grammeLength - 1]
             if historicalTuple in self.grammes[grammeLength -1]:
-                probability = self.grammes[grammeLength][tuple] / float(self.grammes[grammeLength - 1][historicalTuple])
+                probability = __calculate_standard_probability(self,tuple)
             else:
                 newTuple = tuple[1:]
                 probability = self.backoff_constant * __calculate_probability_stupid_backoff(self,newTuple)
     return probability
 
 def __calculate_probability_add_delta(self, tuple):
-    grammeLength = len(tuple)
-    if (grammeLength == 1):
-        probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
-            self.nb_of_words_in_corpus + (self.delta_value * len(self.grammes[grammeLength])))
-    else:
-        newTuple = tuple[:grammeLength - 1]
-        probability = (self.grammes[grammeLength][tuple] + self.delta_value) / float(
-            self.grammes[grammeLength - 1][newTuple] + (self.delta_value * len(self.grammes[grammeLength])))
-
-    return probability
+    return calculate_logprob(self.calculate_probability_with_delta(tuple,[]))
 
 
 def __calculate_standard_probability(self,tuple):
