@@ -100,14 +100,16 @@ class ProverbeCompletor:
                     best_candidate_tuple = (candidate_word,)
         completed_proverbe = incomplete_proverbe.replace(self.UNKNOWN_SEQUENCE, best_candiate, 1)
         perplexity = self.calculate_perplexity(best_candidate_tuple)
+        should_be_ignore_for_perplexity = False if perplexity >=1 else True
         if self.UNKNOWN_SEQUENCE in completed_proverbe:
-            completed_proverbe, next_perplexity = self.complete(completed_proverbe, candidate_words, n_gramme)
-            return completed_proverbe, (next_perplexity + perplexity)
+            completed_proverbe, next_perplexity, next_should_be_ignore_for_perplexity = self.complete(completed_proverbe, candidate_words, n_gramme)
+            return completed_proverbe, (next_perplexity + perplexity), should_be_ignore_for_perplexity or next_should_be_ignore_for_perplexity
         else:
-            return completed_proverbe, perplexity
+            return completed_proverbe, perplexity, should_be_ignore_for_perplexity
 
     def calculate_perplexity(self, tuple):
-        return self.probability_function(self, tuple) ** (-1.0 / len(tuple))
+        tuple_probability = self.probability_function(self, tuple)
+        return tuple_probability ** (-1.0 / len(tuple)) if tuple_probability > 0 else 0
 
 def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpus):
     print("Executing proverbe completor on file " + file + " using a model trained with " + str(n_gramme) + " grammes.")
@@ -120,9 +122,10 @@ def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpu
                 candidate_words = eval(file_line.split(": ")[1])
                 if type(candidate_words) is tuple:
                     candidate_words = candidate_words[0]
-                returned_proverbe, perplexity_sum = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
-                perplexity = perplexity_sum / incomplet_proverbe.count(proverbe_completor.UNKNOWN_SEQUENCE)
-                perplexities.append(perplexity)
+                returned_proverbe, perplexity_sum, should_be_ignore_for_perplexity = proverbe_completor.complete(incomplet_proverbe, candidate_words, n_gramme)
+                if not should_be_ignore_for_perplexity:
+                    perplexity = perplexity_sum / incomplet_proverbe.count(proverbe_completor.UNKNOWN_SEQUENCE)
+                    perplexities.append(perplexity)
                 print(returned_proverbe + "  Candidat choice: " + str(candidate_words))
                 corpus.seek(0)
                 for corpus_line in corpus:
@@ -133,7 +136,8 @@ def execute_proverbe_completor_on_file(file, n_gramme, proverbe_completor, corpu
     print("Number of correct proverbe: " + str(nb_correct_proverbe))
     print("Mean perplexity: " + str(np.mean(perplexities)))
 
-
+def calculate_logprob(probabilities):
+    return math.exp(np.sum(np.log10(probabilities)))
 
 def __calculate_probability_stupid_backoff(self, tuple):
     probability = 0
@@ -156,9 +160,6 @@ def __calculate_probability_add_delta(self, tuple):
 
 def __calculate_standard_probability(self,tuple):
     return calculate_logprob(self.calculate_probability(tuple,[]))
-
-def calculate_logprob(probabilities):
-    return math.exp(np.sum(np.log10(probabilities)))
 
 
 def main(argv):
